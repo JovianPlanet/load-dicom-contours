@@ -18,16 +18,20 @@ head_8_502 = './data/segmentacion_displasias/FCD008_MR_1/502/DICOM'
 
 #plot_every_dcm_singleframe('./segmentacion_displasias/segmentacion_displasias/FCD007_MR_1/801/DICOM/')
 
-contourPixels, slice_numbers, ref_SOP, num_seqs = get_contour_data(contour_7_801)
+contourPixels, slice_numbers, ref_SOP, num_seqs, contours_data = get_contour_data(contour_7_801)
 
 print(f'Tamano SOP ids: {len(ref_SOP)}\n')
 
 #plot_slice(mri_img[10,:,:],mri_img[15,:,:],mri_img[20,:,:])
 
+""" Create Results Folder """
+os.makedirs("./Results", exist_ok=True)
+
 for seq in range(num_seqs):
+
     mri_img, mri_pixel_spacing, mri_image_position_patient, mri_dims = get_image_data(head_7_801, slice_numbers[seq], ref_SOP[seq])
+    contour, matrix_contour = coor2pix(contourPixels[seq], mri_image_position_patient, mri_pixel_spacing)
+    coord = np.array(contour).reshape((len(contour[:]), 2))
 
-    contour = coor2pix(contourPixels[seq], mri_image_position_patient, mri_pixel_spacing)
-    coord = np.array(contour).reshape((len(contour[:])//2, 2))
-
-    plot_dcm_contours(mri_img, slice_numbers[seq], coord)
+    plot_image(mri_img, matrix_contour, seq )
+    #plot_dcm_contours(mri_img, slice_numbers[seq], coord)

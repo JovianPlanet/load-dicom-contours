@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pydicom import dcmread, read_file
 from pydicom.data import get_testdata_file
-import dicom_contour.contour as ctr
+# import dicom_contour.contour as ctr
 from natsort import natsorted
+from scipy.sparse import csc_matrix
 
 def plot_slice(t1, t1_sim, flair_sim):
     fig = plt.figure(figsize=(16, 16))
@@ -58,23 +59,57 @@ def plot_dcm_contours(dcm, slice_, contour):
     plt.plot(contour[:,0], contour[:,1], color='red') #(coord[:,0]+10, coord[:,1]-5)
     plt.show()
 
+
+def plot_image(img_mri, contours, num):
+
+    masked_contour_arr = np.ma.masked_where(contours == 0, contours)
+
+    plt.figure()
+    plt.imshow(img_mri, cmap='gray', interpolation='none')
+    plt.imshow(masked_contour_arr, cmap='autumn', interpolation='none', alpha=0.9)
+    plt.savefig(f"./Results/Sequen_{num}.png")
+
 '''
 Convierte de coordenadas dicom (reales) a pixeles de numpy
 Basada en: https://stackoverflow.com/questions/55154635/how-to-convert-dicom-rt-structure-contour-data-into-image-coordinate
 '''
 def coor2pix(data, origin, spacing):
-    points = []
-    for value in data:
-        x = value[0]
-        y = value[1]
-        X = int((float(x) - float(origin[0])) / float(spacing[0]))
-        Y = int((float(y) - float(origin[1])) / float(spacing[1]))
-        points.append(X)
-        points.append(Y)
-    points.append(points[0]) # Se agregan al final las coordenadas de primer punto para cerrar la region de interes
-    points.append(points[1])
-    #print(points)
-    return points
+
+    # x, y, z coordinates of the contour in mm
+    x0, y0, z0 = data[-1]
+
+    coord = []
+    for i in range(0, len(data)):
+        x = data[i,0]
+        y = data[i,1]
+        z = data[i,2]
+        l = math.sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0))
+        l = math.ceil(l*2)+1
+        for j in range(1, l+1):
+          coord.append([(x-x0)*j/l+x0, (y-y0)*j/l+y0, (z-z0)*j/l+z0])
+        x0 = x
+        y0 = y
+        z0 = z
+
+    origin_y    = origin[1]
+    origin_x    = origin[0]
+    y_spacing   = spacing[1]
+    x_spacing   = spacing[0]
+
+    # y, x is how it's mapped
+    pixel_coords = [(np.round((y - origin_y) / y_spacing), np.round((x - origin_x) / x_spacing)) for x, y, _ in coord]
+
+    # get contour data for the image
+    rows = []
+    cols = []
+    for i, j in list(set(pixel_coords)):
+        rows.append(i)
+        cols.append(j)
+    
+    #! Corregir shape de la imagen
+    contour_arr = csc_matrix((np.ones_like(rows), (rows, cols)), dtype=np.int8, shape=(256, 256)).toarray()
+
+    return pixel_coords, contour_arr
 
 '''
 Load dicom contour data (Cargar las coordenadas de la ROI delineada por el experto)
@@ -93,11 +128,13 @@ def get_contour_data(contour_path):
     contours = []
     slices = []
     SOP_IDs = []
+    contour_data = []                                   # Lista para guardar los ContoursData originales y retornarlos
     for seq in range(num_seqs):
 
         # print(f'mri referencia: {}')
         SOP_IDs.append(ds_roi.ReferencedFrameOfReferenceSequence[0].RTReferencedStudySequence[0].RTReferencedSeriesSequence[0].ContourImageSequence[seq].ReferencedSOPInstanceUID)
         ds_contour = ds_roi.ROIContourSequence[0].ContourSequence[seq].ContourData
+        contour_data.append(ds_contour)
         contourPixels = np.array(ds_contour[:]).reshape((len(ds_contour[:])//3, 3))
         contours.append(contourPixels)
         #print(f'Numero de puntos: {contourPixels.shape[0]}\n')
@@ -110,7 +147,7 @@ def get_contour_data(contour_path):
     #slice_number = referenced_slice_number - 1
     #print(f'Referenced SOP IDs = {SOP_IDs}')
 
-    return contours, slices, SOP_IDs, num_seqs
+    return contours, slices, SOP_IDs, num_seqs, contour_data
 
 '''
 Funcion para extraer datos de la imagen real en el slice referenciado por el dicom con el contorno

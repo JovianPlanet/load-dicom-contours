@@ -67,6 +67,7 @@ def plot_image(img_mri, contours, num):
     plt.figure()
     plt.imshow(img_mri, cmap='gray', interpolation='none')
     plt.imshow(masked_contour_arr, cmap='autumn', interpolation='none', alpha=0.9)
+    plt.show()
     plt.savefig(f"./Results/Sequen_{num}.png")
 
 '''
@@ -105,7 +106,7 @@ def coor2pix(data, origin, spacing):
     for i, j in list(set(pixel_coords)):
         rows.append(i)
         cols.append(j)
-    
+
     #! Corregir shape de la imagen
     contour_arr = csc_matrix((np.ones_like(rows), (rows, cols)), dtype=np.int8, shape=(256, 256)).toarray()
 

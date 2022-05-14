@@ -34,4 +34,4 @@ for seq in range(num_seqs):
     coord = np.array(contour).reshape((len(contour[:]), 2))
     coord = coord[:,[1,0]]
 
-    plot_dcm_contours(mri_img, slice_numbers[seq], coord)
+    plot_dcm_contours(mri_img, slice_numbers[seq], coord, seq)

@@ -43,7 +43,7 @@ def plot_every_dcm_singleframe(path):
         ax1.imshow(img[:,:], cmap="gray")
         plt.show()
 
-def plot_dcm_contours(dcm, slice_, contour):
+def plot_dcm_contours(dcm, slice_, contour, num):
     fig = plt.figure(figsize=(16, 16))
     fig.subplots_adjust(hspace=1, wspace=1)
 
@@ -67,7 +67,7 @@ def plot_image(img_mri, contours, num):
 
     plt.figure()
     plt.imshow(img_mri, cmap='gray', interpolation='none')
-    plt.imshow(masked_contour_arr, cmap='autumn', interpolation='none', alpha=0.9)
+    plt.imshow(masked_contour_arr, cmap='autumn', interpolation='none', alpha=0.9),
     plt.show()
     plt.savefig(f"./Results/Sequen_{num}.png", dpi=300, bbox_inches='tight' )
 

@@ -57,6 +57,7 @@ def plot_dcm_contours(dcm, slice_, contour):
 
     #plt.scatter(coord[:,0], coord[:,1], s=2, alpha=0.5, color='red')
     plt.plot(contour[:,0], contour[:,1], color='red') #(coord[:,0]+10, coord[:,1]-5)
+    plt.savefig(f"./Results/Sequen_{num}.png", dpi=300, bbox_inches='tight' )
     plt.show()
 
 
@@ -68,7 +69,7 @@ def plot_image(img_mri, contours, num):
     plt.imshow(img_mri, cmap='gray', interpolation='none')
     plt.imshow(masked_contour_arr, cmap='autumn', interpolation='none', alpha=0.9)
     plt.show()
-    plt.savefig(f"./Results/Sequen_{num}.png")
+    plt.savefig(f"./Results/Sequen_{num}.png", dpi=300, bbox_inches='tight' )
 
 '''
 Convierte de coordenadas dicom (reales) a pixeles de numpy

@@ -32,6 +32,6 @@ for seq in range(num_seqs):
     mri_img, mri_pixel_spacing, mri_image_position_patient, mri_dims = get_image_data(head_7_801, slice_numbers[seq], ref_SOP[seq])
     contour, matrix_contour = coor2pix(contourPixels[seq], mri_image_position_patient, mri_pixel_spacing)
     coord = np.array(contour).reshape((len(contour[:]), 2))
+    coord = coord[:,[1,0]]
 
-    plot_image(mri_img, matrix_contour, seq )
-    #plot_dcm_contours(mri_img, slice_numbers[seq], coord)
+    plot_dcm_contours(mri_img, slice_numbers[seq], coord)
